@@ -32,7 +32,9 @@
   list
   add Betsy Choo p/222222 e/benchoo@nus.edu.sg
   list
-  update Adam Brown p/12345
+  update Adam Brownie p/12345
+  list
+  update Adam Brown p/123456
   list
   update Adam Brown e/brown@gmail.com
   list

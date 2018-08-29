@@ -68,6 +68,7 @@ public class AddressBook {
      * =========================================================================
      */
     private static final String MESSAGE_ADDED = "New person added: %1$s, Phone: %2$s, Email: %3$s";
+    private static final String MESSAGE_UPDATED = "Person %1$s successfully updated.";
     private static final String MESSAGE_ADDRESSBOOK_CLEARED = "Address book has been cleared!";
     private static final String MESSAGE_COMMAND_HELP = "%1$s: %2$s";
     private static final String MESSAGE_COMMAND_HELP_PARAMETERS = "\tParameters: %1$s";
@@ -465,8 +466,7 @@ public class AddressBook {
     private static String executeUpdatePerson(String commandArgs) {
         // try decoding a person from the raw args
         final String name = extractNameFromPersonString(commandArgs);
-        final Set<String> keywords = extractKeywordsFromFindPersonArgs(name);
-        final ArrayList<HashMap<PersonProperty, String>> personsFound = getPersonsWithNameContainingAnyKeyword(keywords);
+        final ArrayList<HashMap<PersonProperty, String>> personsFound = getPersonsWithNameContainingAnyKeyword(Set.of(name));
         
         if (personsFound.size() == 0 || personsFound.size() > 1) {
             return String.format(MESSAGE_UNIQUE_PERSON_NOT_FOUND, name);
@@ -475,8 +475,23 @@ public class AddressBook {
         final HashMap<PersonProperty, String> person = personsFound.get(0);
         final String number = extractPhoneFromPersonString(commandArgs);
         final String email = extractEmailFromPersonString(commandArgs);
+        
+        if (number == null && email == null) {
+            return getMessageForInvalidCommandInput(COMMAND_UPDATE_WORD, getUsageInfoForUpdateCommand());
+        }
+
         updatePersonInAddressBook(person, number, email);
-        return "success";
+        return getMessageForSuccessfulUpdatePerson(name);
+    }
+
+    /**
+     * Constructs feedback message when a person is successfully updated.
+     * 
+     * @param name The name of the person
+     * @return the feedback display.
+     */
+    private static String getMessageForSuccessfulUpdatePerson(String name) {
+        return String.format(MESSAGE_UPDATED, name);
     }
 
     /**
@@ -1162,6 +1177,13 @@ public class AddressBook {
         return String.format(MESSAGE_COMMAND_HELP, COMMAND_ADD_WORD, COMMAND_ADD_DESC) + LS
                 + String.format(MESSAGE_COMMAND_HELP_PARAMETERS, COMMAND_ADD_PARAMETERS) + LS
                 + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_ADD_EXAMPLE) + LS;
+    }
+
+    /** Returns the string for showing 'update' command usage instruction */
+    private static String getUsageInfoForUpdateCommand() {
+        return String.format(MESSAGE_COMMAND_HELP, COMMAND_UPDATE_WORD, COMMAND_UPDATE_DESC) + LS
+                + String.format(MESSAGE_COMMAND_HELP_PARAMETERS, COMMAND_UPDATE_PARAMETERS) + LS
+                + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_UPDATE_EXAMPLE) + LS;
     }
 
     /** Returns the string for showing 'find' command usage instruction */
