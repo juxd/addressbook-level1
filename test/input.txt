@@ -58,6 +58,8 @@
   find Betsy
   # find multiple with same keyword
   find Dickson
+  # find multiple with mixed keywords
+  find Charlie betsy
   # find multiple with some keywords
   find Charlie Betsy
 

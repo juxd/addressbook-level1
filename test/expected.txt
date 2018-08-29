@@ -198,6 +198,11 @@
 || 
 || 2 persons found!
 || ===================================================
+|| Enter command: || [Command entered:  find Charlie betsy]
+|| 	1. Charlie Dickson  Phone Number: 333333  Email: charlie.d@nus.edu.sg
+|| 
+|| 1 persons found!
+|| ===================================================
 || Enter command: || [Command entered:  find Charlie Betsy]
 || 	1. Betsy Choo  Phone Number: 222222  Email: benchoo@nus.edu.sg
 || 	2. Charlie Dickson  Phone Number: 333333  Email: charlie.d@nus.edu.sg
