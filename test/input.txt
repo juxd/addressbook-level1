@@ -32,6 +32,10 @@
   list
   add Betsy Choo p/222222 e/benchoo@nus.edu.sg
   list
+  update Adam Brown p/12345
+  list
+  update Adam Brown e/brown@gmail.com
+  list
 
   # order of phone and email should not matter
   add Charlie Dickson e/charlie.d@nus.edu.sg p/333333

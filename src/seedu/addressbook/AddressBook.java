@@ -84,6 +84,7 @@ public class AddressBook {
     private static final String MESSAGE_INVALID_PERSON_DISPLAYED_INDEX = "The person index provided is invalid";
     private static final String MESSAGE_INVALID_STORAGE_FILE_CONTENT = "Storage file has invalid content";
     private static final String MESSAGE_PERSON_NOT_IN_ADDRESSBOOK = "Person could not be found in address book";
+    private static final String MESSAGE_UNIQUE_PERSON_NOT_FOUND = "No unique person with name %1$s found.";
     private static final String MESSAGE_ERROR_CREATING_STORAGE_FILE = "Error: unable to create file: %1$s";
     private static final String MESSAGE_ERROR_MISSING_STORAGE_FILE = "Storage file missing: %1$s";
     private static final String MESSAGE_ERROR_READING_FROM_FILE = "Unexpected error: unable to read from file: %1$s";
@@ -381,6 +382,8 @@ public class AddressBook {
         switch (commandType) {
             case COMMAND_ADD_WORD:
                 return executeAddPerson(commandArgs);
+            case COMMAND_UPDATE_WORD:
+                return executeUpdatePerson(commandArgs);
             case COMMAND_FIND_WORD:
                 return executeFindPersons(commandArgs);
             case COMMAND_LIST_WORD:
@@ -450,6 +453,30 @@ public class AddressBook {
     private static String getMessageForSuccessfulAddPerson(HashMap<PersonProperty, String> addedPerson) {
         return String.format(MESSAGE_ADDED,
                 getNameFromPerson(addedPerson), getPhoneFromPerson(addedPerson), getEmailFromPerson(addedPerson));
+    }
+    
+    /**
+     * Updates a person (specified by the command args) to the address book.
+     * The entire command arguments string is treated as a string representation of the person to add.
+     *
+     * @param commandArgs full command args string from the user
+     * @return feedback display message for the operation result
+     */
+    private static String executeUpdatePerson(String commandArgs) {
+        // try decoding a person from the raw args
+        final String name = extractNameFromPersonString(commandArgs);
+        final Set<String> keywords = extractKeywordsFromFindPersonArgs(name);
+        final ArrayList<HashMap<PersonProperty, String>> personsFound = getPersonsWithNameContainingAnyKeyword(keywords);
+        
+        if (personsFound.size() == 0 || personsFound.size() > 1) {
+            return String.format(MESSAGE_UNIQUE_PERSON_NOT_FOUND, name);
+        }
+
+        final HashMap<PersonProperty, String> person = personsFound.get(0);
+        final String number = extractPhoneFromPersonString(commandArgs);
+        final String email = extractEmailFromPersonString(commandArgs);
+        updatePersonInAddressBook(person, number, email);
+        return "success";
     }
 
     /**
@@ -798,6 +825,23 @@ public class AddressBook {
     }
 
     /**
+     * Updates a person's properties in the address book.
+     *
+     * @param person person to add.
+     * @param phone_number the number to update.
+     * @param email the email to update.
+     */
+    private static void updatePersonInAddressBook(HashMap<PersonProperty, String> person, String phone_number, String email) {
+        if (phone_number != null) {
+            person.put(PersonProperty.PHONE, phone_number);
+        }
+        if (email != null) {
+            person.put(PersonProperty.EMAIL, email);
+        }
+        savePersonsToFile(getAllPersonsInAddressBook(), storageFilePath);
+    }
+
+    /**
      * Deletes the specified person from the addressbook if it is inside. Saves any changes to storage file.
      *
      * @param exactPerson the actual person inside the address book (exactPerson == the person to delete in the full list)
@@ -983,7 +1027,11 @@ public class AddressBook {
         final int indexOfPhonePrefix = encoded.indexOf(PERSON_DATA_PREFIX_PHONE);
         final int indexOfEmailPrefix = encoded.indexOf(PERSON_DATA_PREFIX_EMAIL);
         // name is leading substring up to first data prefix symbol
-        int indexOfFirstPrefix = Math.min(indexOfEmailPrefix, indexOfPhonePrefix);
+        int indexOfFirstPrefix = indexOfPhonePrefix == -1 
+            ? indexOfEmailPrefix 
+            : indexOfEmailPrefix == -1
+                ? indexOfPhonePrefix
+                : Math.min(indexOfEmailPrefix, indexOfPhonePrefix);
         return encoded.substring(0, indexOfFirstPrefix).trim();
     }
 
@@ -996,6 +1044,10 @@ public class AddressBook {
     private static String extractPhoneFromPersonString(String encoded) {
         final int indexOfPhonePrefix = encoded.indexOf(PERSON_DATA_PREFIX_PHONE);
         final int indexOfEmailPrefix = encoded.indexOf(PERSON_DATA_PREFIX_EMAIL);
+        
+        if (indexOfPhonePrefix == -1) {
+            return null;
+        }
 
         // phone is last arg, target is from prefix to end of string
         if (indexOfPhonePrefix > indexOfEmailPrefix) {
@@ -1019,6 +1071,10 @@ public class AddressBook {
     private static String extractEmailFromPersonString(String encoded) {
         final int indexOfPhonePrefix = encoded.indexOf(PERSON_DATA_PREFIX_PHONE);
         final int indexOfEmailPrefix = encoded.indexOf(PERSON_DATA_PREFIX_EMAIL);
+
+        if (indexOfEmailPrefix == -1) {
+            return null;
+        }
 
         // email is last arg, target is from prefix to end of string
         if (indexOfEmailPrefix > indexOfPhonePrefix) {
